@@ -241,40 +241,40 @@ namespace Shoplifter
                             break;
                         // For each action that would open a shop that can be shoplifted, check if it can be shoplifted and take appropriate action
                         case "HospitalShop":
-                            ShopMenuUtilities.HospitalShopliftingMenu(location, Game1.player);
+                            ShopMenuUtilities.CreateHospitalShopliftingMenu(location, Game1.player);
                             break;
 
                         case "Carpenter":
-                            ShopMenuUtilities.CarpenterShopliftingMenu(location, Game1.player, tilelocation);
+                            ShopMenuUtilities.CreateCarpenterShopliftingMenu(location, Game1.player, tilelocation);
                             break;
 
                         case "AnimalShop":
-                            ShopMenuUtilities.AnimalShopShopliftingMenu(location, Game1.player, tilelocation);
+                            ShopMenuUtilities.CreateAnimalShopShopliftingMenu(location, Game1.player, tilelocation);
                             break;
 
                         case "Blacksmith":
-                            ShopMenuUtilities.BlacksmithShopliftingMenu(location, tilelocation);
+                            ShopMenuUtilities.CreateBlacksmithShopliftingMenu(location, tilelocation);
                             break;
 
                         case "Saloon":
-                            ShopMenuUtilities.SaloonShopliftingMenu(location, tilelocation);
+                            ShopMenuUtilities.CreateSaloonShopliftingMenu(location, tilelocation);
                             break;
                         case "IceCreamStand":
-                            ShopMenuUtilities.IceCreamShopliftingMenu(location, tilelocation);
+                            ShopMenuUtilities.CreateIceCreamShopliftingMenu(location, tilelocation);
                             break;
 
                         case "Buy":
                             if (split[1] == "Fish")
                             {
-                                ShopMenuUtilities.FishShopShopliftingMenu(location);
+                                ShopMenuUtilities.CreateFishShopShopliftingMenu(location);
                             }
                             else if (location is SeedShop && PerScreenShopliftCounter.Value < config.MaxShopliftsPerDay)
                             {
-                                ShopMenuUtilities.SeedShopShopliftingMenu(location);
+                                ShopMenuUtilities.CreateSeedShopShopliftingMenu(location);
                             }
                             else if (location.name.Equals("SandyHouse"))
                             {
-                                ShopMenuUtilities.SandyShopShopliftingMenu(location);
+                                ShopMenuUtilities.CreateSandyShopShopliftingMenu(location);
                             }
                             break;
                     }
@@ -288,7 +288,7 @@ namespace Shoplifter
                     {
                         if (split[0] == customshop.Value.ShopName || split[0] == $"Vanilla!{customshop.Value.ShopName}")
                         {
-                            ShopMenuUtilities.CustomShop(customshop.Value, Game1.currentLocation, config);
+                            ShopMenuUtilities.CreateCustomShopliftingMenu(customshop.Value, Game1.currentLocation, config);
                         }
                     }
                 }             

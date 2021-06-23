@@ -76,43 +76,51 @@ namespace Shoplifter
 			{
 				// Pierre's shop
 				case "SeedShop":
+				case "PierreShop":
 					location = Game1.getLocationFromName("SeedShop");
 					GetAvailableItems((location as SeedShop).shopStock());
 					break;
 
 				// Willy's shop
 				case "FishShop":
+				case "WillyShop":
 					GetAvailableItems(Utility.getFishShopStock(Game1.player));
 					break;
 
 				// Robin's shop
 				case "Carpenters":
+				case "RobinShop":
 					GetAvailableItems(Utility.getCarpenterStock());
 					break;
 
 				// Marnie's shop
 				case "AnimalShop":
+				case "MarnieShop":
 					GetAvailableItems(Utility.getAnimalShopStock());
 					break;
 
 				// Clint's shop
 				case "Blacksmith":
+				case "ClintShop":
 					GetAvailableItems(Utility.getBlacksmithStock());
 					break;
 
 				// Gus' shop
 				case "Saloon":
+				case "GusShop":
 					GetAvailableItems(Utility.getSaloonStock());
 					break;
 
 				// Harvey's shop
 				case "HospitalShop":
+				case "HarveyShop":
 					GetAvailableItems(Utility.getHospitalStock());
 					break;
 				case "JojaShop":
 					GetAvailableItems(Utility.getJojaStock());
 					break;
 				case "AdventureShop":
+				case "MarlonShop":
 					GetAvailableItems(Utility.getAdventureShopStock());
 					break;
 
@@ -130,7 +138,7 @@ namespace Shoplifter
 				case "DwarfShop":
 					GetAvailableItems(Utility.getDwarfShopStock());
 					break;
-				case "HatShop":
+				case "HatMouse":
 					GetAvailableItems(Utility.getHatStock());
 					break;
 				default:

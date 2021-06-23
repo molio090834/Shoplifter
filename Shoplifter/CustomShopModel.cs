@@ -18,6 +18,5 @@ namespace Shoplifter
         public Dictionary<ISalable, int[]> ItemsForSale { get; set; } = null;
         public int MaxNumberofItems { get; set; } = 3;
         public int MaxQuantityofItems { get; set; } = 3;
-        public string VanillaShop { get; set; } = "nope";
     }
 }
