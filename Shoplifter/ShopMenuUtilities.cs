@@ -6,6 +6,7 @@ using StardewValley.Menus;
 using StardewValley;
 using Microsoft.Xna.Framework;
 using xTile.Dimensions;
+using System.Collections;
 
 namespace Shoplifter
 {
@@ -63,7 +64,7 @@ namespace Shoplifter
         /// <param name="who">The player to catch</param>
         /// <param name="location">The current location instance</param>
         /// <returns>Whether the player was caught</returns>      
-        public static bool ShouldBeCaught(string[] which, Farmer who, GameLocation location)
+        public static bool ShouldBeCaught(string[] which, Farmer who, GameLocation location, string[] caughtdialogue = null)
         {
             foreach(string character in which)
             {
@@ -92,6 +93,14 @@ namespace Shoplifter
 
                         }
 
+                        else if (caughtdialogue != null)
+                        {
+                            dialogue = (fineamount > 0)
+                                    ? caughtdialogue[0].Replace("{0}", fineamount.ToString())
+                                    : caughtdialogue[1];
+                            npc.setNewDialogue(dialogue, add: true);
+                        }
+
                         else
                         {
                             // No, use generic dialogue
@@ -113,9 +122,10 @@ namespace Shoplifter
                         npc.setNewDialogue(ModEntry.shopliftingstrings["Placeholder"], add: true);
                     }
 
+                    
                     // Draw dialogue for NPC, dialogue box opens
                     Game1.drawDialogue(npc);
-                    monitor.Log($"{character} caught you shoplifting... You were fined {fineamount}g");
+                    monitor.Log($"{which} caught you shoplifting... You were fined {fineamount}g");
 
                     return true;
                 }
@@ -171,6 +181,55 @@ namespace Shoplifter
 
             // Join manipulated data for recording in save file
             data[$"{manifest.UniqueID}_{locationname}"] = string.Join("/", fields);
+        }
+
+        public static void CustomShopliftingMenu(GameLocation location, string[] shopkeepers, CustomShopModel customshop)
+        {           
+            NPC primaryowner = location.getCharacterFromName(customshop.PrimaryShopKeeper);
+
+            if ((Game1.timeOfDay < customshop.OpenTime || Game1.timeOfDay > customshop.CloseTime))
+            {
+                if (ModEntry.PerScreenStolen.Value == false)
+                {
+                    // Create option to steal
+                    location.createQuestionDialogue("Shoplift?", location.createYesNoResponses(), delegate (Farmer _, string answer)
+                    {
+                        // Player answered yes
+                        if (answer == "Yes")
+                        {
+                            SeenShoplifting(location, Game1.player);
+
+                            if (ShouldBeCaught(new string[1] {customshop.PrimaryShopKeeper }, Game1.player, location, customshop.CaughtDialogue) == true)
+                            {
+                                // After dialogue, apply penalties
+                                Game1.afterDialogues = delegate
+                                {
+                                    ShopliftingPenalties(location, false);
+                                };
+
+                                return;
+                            }
+                            else if (ShouldBeCaught(shopkeepers, Game1.player, location) == true)
+                            {
+                                // After dialogue, apply penalties
+                                Game1.afterDialogues = delegate
+                                {
+                                    ShopliftingPenalties(location, false);
+                                };
+
+                                return;
+                            }
+
+                            // Not caught, generate stock for shoplifting, on purchase make sure player can't steal again
+                            Game1.activeClickableMenu = new ShopMenu(ShopStock.generateRandomStock(customshop.MaxNumberofItems, customshop.MaxQuantityofItems, customshop.VanillaShop, customshop), 3, null, delegate
+                            {
+                                ModEntry.PerScreenStolen.Value = true;
+                                return false;
+                            }, null, "");
+                        }
+                    });
+                }
+            }
         }
 
         /// <summary>
@@ -659,6 +718,30 @@ namespace Shoplifter
                     Game1.drawObjectDialogue(ModEntry.shopliftingstrings["Placeholder"]);
                 }
             }
+        }
+
+        public static void CustomShop(CustomShopModel customshop, GameLocation location, ModConfig config)
+        {
+            if (ModEntry.PerScreenShopliftCounter.Value < config.MaxShopliftsPerDay)
+            {
+                CustomShopliftingMenu(location, customshop.AdditionalShopKeepers,customshop);
+            }
+
+            else
+            {
+                if (ModEntry.shopliftingstrings.ContainsKey("TheMightyAmondee.Shoplifter/AlreadyShoplifted") == true)
+                {
+                    Game1.drawObjectDialogue(config.MaxShopliftsPerDay != 1
+                        ? string.Format(ModEntry.shopliftingstrings["TheMightyAmondee.Shoplifter/AlreadyShoplifted"], config.MaxShopliftsPerDay)
+                        : ModEntry.shopliftingstrings["TheMightyAmondee.Shoplifter/AlreadyShoplifted"].Replace("{0} times ", ""));
+                }
+
+                else
+                {
+                    Game1.drawObjectDialogue(ModEntry.shopliftingstrings["Placeholder"]);
+                }
+            }
+
         }
     }
 }

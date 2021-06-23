@@ -9,6 +9,11 @@ using xTile.Dimensions;
 
 namespace Shoplifter
 {
+    public interface ISTFApi
+    {
+        Dictionary<ISalable, int[]> GetItemPriceAndStock(string shopName);
+    }
+
     public class ModEntry
         : Mod
     {
@@ -25,10 +30,16 @@ namespace Shoplifter
         public static readonly PerScreen<ArrayList> PerScreenShopsBannedFrom = new PerScreen<ArrayList>(createNewState: () => new ArrayList());
 
         public static readonly string[] shops = { "SeedShop", "FishShop", "AnimalShop", "ScienceHouse", "Hospital", "Blacksmith", "Saloon", "SandyHouse" };
-     
+
+        public static Dictionary<string, CustomShopModel> customshops = new Dictionary<string, CustomShopModel>();
+
+        public static ISTFApi api;
+
 
         public override void Entry(IModHelper helper)
-        {          
+        {
+            ShopMenuUtilities.gethelpers(this.Monitor, this.ModManifest, this.config);
+            ShopStock.gethelpers(this.Monitor, this.Helper);
             helper.Events.GameLoop.DayStarted += this.DayStarted;
             helper.Events.GameLoop.GameLaunched += this.Launched;
             helper.Events.Input.ButtonPressed += this.Action;
@@ -43,7 +54,7 @@ namespace Shoplifter
                 this.Monitor.Log("Failed to parse config file, default options will be used. Ensure only positive whole numbers are entered in config", LogLevel.Warn);
             }
             
-            ShopMenuUtilities.gethelpers(this.Monitor, this.ModManifest, this.config);
+
         }
         private void DayStarted(object sender, DayStartedEventArgs e)
         {
@@ -154,7 +165,32 @@ namespace Shoplifter
             {             
                 this.Monitor.Log("Could not load strings... This will result in missing string problems, (Are you missing the Strings.json file?)", LogLevel.Error);
             }
-           
+
+            foreach (IContentPack contentPack in this.Helper.ContentPacks.GetOwned())
+            {
+                if (!contentPack.HasFile("content.json"))
+                {
+                    this.Monitor.Log($"Skipping content pack \"{contentPack.Manifest.Name}\", it does not have a content.json", LogLevel.Warn);
+                }
+                else
+                {
+                    this.Monitor.Log($"Loading content pack {contentPack.Manifest.Name} {contentPack.Manifest.Version} by {contentPack.Manifest.Author} | {contentPack.Manifest.Description}", LogLevel.Info);
+                    ContentPack data;
+
+                    try
+                    {
+                        data = contentPack.ReadJsonFile<ContentPack>("content.json");
+                    }
+                    catch
+                    {
+                        this.Monitor.Log("Error reading content pack", LogLevel.Error);
+                        continue;
+                    }
+
+                    ModEntry.RegisterShopliftableShop(data, api, this.Monitor);
+                }
+            }
+
         }
 
         private void Action(object sender, ButtonPressedEventArgs e)
@@ -242,7 +278,24 @@ namespace Shoplifter
                             }
                             break;
                     }
-                }               
+                }
+
+                split = location.doesTileHavePropertyNoNull((int)TileX, (int)TileY, "Shop", "Buildings").Split(' ');
+
+                if (split != null)
+                {
+                    foreach (var customshop in customshops)
+                    {
+                        if (!System.Diagnostics.Debugger.IsAttached)
+                        {
+                            System.Diagnostics.Debugger.Launch();
+                        }
+                        if (split[0] == customshop.Value.ShopName || split[0] == $"Vanilla!{customshop.Value.ShopName}")
+                        {
+                            ShopMenuUtilities.CustomShop(customshop.Value, Game1.currentLocation, this.config);
+                        }
+                    }
+                }             
             }
         }
 
@@ -266,6 +319,24 @@ namespace Shoplifter
             catch
             {
                 this.Monitor.Log("Unable to execute command, check formatting is correct", LogLevel.Error);
+            }
+        }
+
+        public static void RegisterShopliftableShop(ContentPack data, ISTFApi api, IMonitor monitor)
+        {
+            if (data.MakeShopliftable != null)
+            {
+                foreach (CustomShopModel shop in data.MakeShopliftable)
+                {
+                    if (customshops.ContainsKey(shop.ShopName))
+                    {
+                        continue;
+
+                    }
+
+                    customshops.Add(shop.ShopName, shop);
+
+                }
             }
         }
     }
