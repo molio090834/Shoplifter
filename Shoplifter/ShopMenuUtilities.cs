@@ -44,7 +44,7 @@ namespace Shoplifter
                     if (Game1.player.friendshipData.ContainsKey(npc.Name) == true)
                     {
                         // Lower friendship by some amount or frienship level, whichever is lower
-                        int frienshiploss = -Math.Min((int)config.FriendshipPenalty, Game1.player.getFriendshipLevelForNPC(npc.Name));
+                        int frienshiploss = -Math.Min((int)ModEntry.config.FriendshipPenalty, Game1.player.getFriendshipLevelForNPC(npc.Name));
                         Game1.player.changeFriendship(frienshiploss, Game1.getCharacterFromName(npc.Name, true));
                         monitor.Log($"{npc.Name} saw you shoplifting... {-frienshiploss} friendship points lost");
                     }
@@ -74,16 +74,24 @@ namespace Shoplifter
                 if (npc != null && npc.currentLocation == who.currentLocation && Utility.tileWithinRadiusOfPlayer(npc.getTileX(), npc.getTileY(), 5, who))
                 {
                     string dialogue;
-                    string banneddialogue = (config.DaysBannedFor == 1)
+                    string banneddialogue = (ModEntry.config.DaysBannedFor == 1)
                         ? ModEntry.shopliftingstrings[$"TheMightyAmondee.Shoplifter/BanFromShop"].Replace("{0} days", "a day")
-                        : string.Format(ModEntry.shopliftingstrings[$"TheMightyAmondee.Shoplifter/BanFromShop"], config.DaysBannedFor.ToString());
+                        : string.Format(ModEntry.shopliftingstrings[$"TheMightyAmondee.Shoplifter/BanFromShop"], ModEntry.config.DaysBannedFor.ToString());
 
-                    fineamount = Math.Min(Game1.player.Money, (int)config.MaxFine);
+                    fineamount = Math.Min(Game1.player.Money, (int)ModEntry.config.MaxFine);
 
                     try
                     {
+                        if (caughtdialogue != null)
+                        {
+                            dialogue = (fineamount > 0)
+                                    ? caughtdialogue[0].Replace("{0}", fineamount.ToString())
+                                    : caughtdialogue[1];
+                            npc.setNewDialogue(dialogue, add: true);
+                        }
+
                         // Is NPC primary shopowner
-                        if (character == "Pierre" || character == "Willy" || character == "Robin" || character == "Marnie" || character == "Gus" || character == "Harvey" || character == "Clint" || character == "Sandy" || character == "Alex")
+                        else if (character == "Pierre" || character == "Willy" || character == "Robin" || character == "Marnie" || character == "Gus" || character == "Harvey" || character == "Clint" || character == "Sandy" || character == "Alex")
                         {
                             // Yes, they have special dialogue
                             dialogue = (fineamount > 0)
@@ -91,15 +99,7 @@ namespace Shoplifter
                                 : ModEntry.shopliftingstrings[$"TheMightyAmondee.Shoplifter/Caught{character}_NoMoney"];
 
 
-                        }
-
-                        else if (caughtdialogue != null)
-                        {
-                            dialogue = (fineamount > 0)
-                                    ? caughtdialogue[0].Replace("{0}", fineamount.ToString())
-                                    : caughtdialogue[1];
-                            npc.setNewDialogue(dialogue, add: true);
-                        }
+                        }                       
 
                         else
                         {
@@ -155,7 +155,7 @@ namespace Shoplifter
 
             var data = Game1.player.modData;        
 
-            if (config.DaysBannedFor == 0 || bannable == false)
+            if (ModEntry.config.DaysBannedFor == 0 || bannable == false)
             {
                 return;
             }
@@ -172,7 +172,7 @@ namespace Shoplifter
             }
 
             // After being caught some times (within 28 days) ban player from shop for three days
-            if (int.Parse(fields[0]) == config.CatchesBeforeBan)
+            if (int.Parse(fields[0]) == ModEntry.config.CatchesBeforeBan)
             {
                 fields[0] = "-1";
                 ModEntry.PerScreenShopsBannedFrom.Value.Add($"{locationname}");
@@ -199,7 +199,7 @@ namespace Shoplifter
                         {
                             SeenShoplifting(location, Game1.player);
 
-                            if (ShouldBeCaught(new string[1] {customshop.PrimaryShopKeeper }, Game1.player, location, customshop.CaughtDialogue) == true)
+                            if (ShouldBeCaught(new string[1] { customshop.PrimaryShopKeeper }, Game1.player, location, customshop.CaughtDialogue) == true)
                             {
                                 // After dialogue, apply penalties
                                 Game1.afterDialogues = delegate

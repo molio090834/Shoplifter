@@ -17,7 +17,7 @@ namespace Shoplifter
     public class ModEntry
         : Mod
     {
-        private ModConfig config;
+        internal static ModConfig config;
 
         public static readonly PerScreen<bool> PerScreenStolen = new PerScreen<bool>(createNewState: () => false);
 
@@ -38,7 +38,7 @@ namespace Shoplifter
 
         public override void Entry(IModHelper helper)
         {
-            ShopMenuUtilities.gethelpers(this.Monitor, this.ModManifest, this.config);
+            ShopMenuUtilities.gethelpers(this.Monitor, this.ModManifest, config);
             ShopStock.gethelpers(this.Monitor, this.Helper);
             helper.Events.GameLoop.DayStarted += this.DayStarted;
             helper.Events.GameLoop.GameLaunched += this.Launched;
@@ -46,11 +46,11 @@ namespace Shoplifter
             helper.ConsoleCommands.Add("shoplifter_resetsave", "Removes and readds save data added by the mod to fix broken save data, only use if you're getting errors", this.ResetSave);
             try
             {
-                this.config = helper.ReadConfig<ModConfig>();
+                config = helper.ReadConfig<ModConfig>();
             }
             catch
             {
-                this.config = new ModConfig();
+                config = new ModConfig();
                 this.Monitor.Log("Failed to parse config file, default options will be used. Ensure only positive whole numbers are entered in config", LogLevel.Warn);
             }
             
@@ -89,7 +89,7 @@ namespace Shoplifter
                 string[] fields = shopliftingdata.Split('_');
 
                 // Player has finished certain number of days ban, remove shop from list, also reset first day caught
-                if (shopliftingdata.StartsWith($"{this.ModManifest.UniqueID}") && int.Parse(values[0]) <= -this.config.DaysBannedFor)
+                if (shopliftingdata.StartsWith($"{this.ModManifest.UniqueID}") && int.Parse(values[0]) <= -config.DaysBannedFor)
                 {
                     values[0] = "0";
                     values[1] = "0";
@@ -126,19 +126,19 @@ namespace Shoplifter
             // Add placeholder for missing strings
             shopliftingstrings.Add("Placeholder", "There's a string missing here...");
 
-            if (this.config.MaxShopliftsPerStore == 0)
+            if (config.MaxShopliftsPerStore == 0)
             {
-                this.config.MaxShopliftsPerStore = 1;
+                config.MaxShopliftsPerStore = 1;
             }
 
-            if (this.config.MaxShopliftsPerDay == 0)
+            if (config.MaxShopliftsPerDay == 0)
             {
-                this.config.MaxShopliftsPerDay = 1;
+                config.MaxShopliftsPerDay = 1;
             }
 
-            if (this.config.CatchesBeforeBan == 0)
+            if (config.CatchesBeforeBan == 0)
             {
-                this.config.CatchesBeforeBan = 1;
+                config.CatchesBeforeBan = 1;
             }
 
             try
@@ -286,13 +286,9 @@ namespace Shoplifter
                 {
                     foreach (var customshop in customshops)
                     {
-                        if (!System.Diagnostics.Debugger.IsAttached)
-                        {
-                            System.Diagnostics.Debugger.Launch();
-                        }
                         if (split[0] == customshop.Value.ShopName || split[0] == $"Vanilla!{customshop.Value.ShopName}")
                         {
-                            ShopMenuUtilities.CustomShop(customshop.Value, Game1.currentLocation, this.config);
+                            ShopMenuUtilities.CustomShop(customshop.Value, Game1.currentLocation, config);
                         }
                     }
                 }             
